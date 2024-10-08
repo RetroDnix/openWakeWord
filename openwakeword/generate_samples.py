@@ -1,4 +1,5 @@
 from melo.api import TTS
+import itertools as it
 from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 from random import randint
@@ -26,9 +27,22 @@ def generate_samples(
     model = TTS(language='ZH', device=device)
     speed = 1.0
     speaker_ids = model.hps.data.spk2id
+    if isinstance(text, str) and os.path.exists(text):
+        texts = it.cycle(
+            [
+                i.strip()
+                for i in open(text, "r", encoding="utf-8").readlines()
+                if len(i.strip()) > 0
+            ]
+        )
+    elif isinstance(text, list):
+        texts = it.cycle(text)
+    else:
+        texts = it.cycle([text])
     for _ in trange(max_samples):
         fname = str(randint(100000000,1000000000))
         wav_path = os.path.join(output_dir, f"{fname}.wav")
+        text = next(texts)
         model.tts_to_file(
             text,
             speaker_ids['ZH'],

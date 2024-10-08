@@ -20,6 +20,8 @@ from openwakeword.data import generate_adversarial_texts, augment_clips, mmap_ba
 from openwakeword.utils import compute_features_from_generator
 from openwakeword.utils import AudioFeatures
 
+from piper_python.piper import generate_samples
+
 
 # Base model class for an openwakeword model
 class Model(nn.Module):
@@ -637,8 +639,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = yaml.load(open(args.training_config, 'r').read(), yaml.Loader)
 
-    from generate_samples import generate_samples
-
     # Define output locations
     config["output_dir"] = os.path.abspath(config["output_dir"])
     if not os.path.exists(config["output_dir"]):
@@ -668,7 +668,9 @@ if __name__ == '__main__':
         n_current_samples = len(os.listdir(positive_train_output_dir))
         if n_current_samples <= 0.95*config["n_samples"]:
             generate_samples(
-                text=config["target_phrase"], max_samples=config["n_samples"]-n_current_samples,
+                text=config["target_phrase"], 
+                max_samples=config["n_samples"]-n_current_samples,
+                model="../models/zh_CN-huayan-medium.onnx",
                 batch_size=config["tts_batch_size"],
                 noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
                 output_dir=positive_train_output_dir, auto_reduce_batch_size=True,
@@ -684,10 +686,17 @@ if __name__ == '__main__':
             os.mkdir(positive_test_output_dir)
         n_current_samples = len(os.listdir(positive_test_output_dir))
         if n_current_samples <= 0.95*config["n_samples_val"]:
-            generate_samples(text=config["target_phrase"], max_samples=config["n_samples_val"]-n_current_samples,
-                             batch_size=config["tts_batch_size"],
-                             noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
-                             output_dir=positive_test_output_dir, auto_reduce_batch_size=True)
+            generate_samples(
+                text=config["target_phrase"], 
+                model="../models/zh_CN-huayan-medium.onnx",
+                max_samples=config["n_samples_val"]-n_current_samples,
+                batch_size=config["tts_batch_size"],
+                noise_scales=[1.0], 
+                noise_scale_ws=[1.0], 
+                length_scales=[0.75, 1.0, 1.25],
+                output_dir=positive_test_output_dir, 
+                auto_reduce_batch_size=True
+            )
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of positive clips testing, as ~{config['n_samples_val']} already exist")
@@ -705,12 +714,18 @@ if __name__ == '__main__':
                     N=config["n_samples"]//len(config["target_phrase"]),
                     include_partial_phrase=1.0,
                     include_input_words=0.2))
-            generate_samples(text=adversarial_texts, max_samples=config["n_samples"]-n_current_samples,
-                             batch_size=config["tts_batch_size"]//7,
-                             noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
-                             output_dir=negative_train_output_dir, auto_reduce_batch_size=True,
-                             file_names=[uuid.uuid4().hex + ".wav" for i in range(config["n_samples"])]
-                             )
+            generate_samples(
+                text=adversarial_texts,
+                model="../models/zh_CN-huayan-medium.onnx", 
+                max_samples=config["n_samples"]-n_current_samples,
+                batch_size=config["tts_batch_size"]//7,
+                noise_scales=[0.98], 
+                noise_scale_ws=[0.98], 
+                length_scales=[0.75, 1.0, 1.25],
+                output_dir=negative_train_output_dir, 
+                auto_reduce_batch_size=True,
+                file_names=[uuid.uuid4().hex + ".wav" for i in range(config["n_samples"])]
+            )
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of negative clips for training, as ~{config['n_samples']} already exist")
@@ -728,10 +743,17 @@ if __name__ == '__main__':
                     N=config["n_samples_val"]//len(config["target_phrase"]),
                     include_partial_phrase=1.0,
                     include_input_words=0.2))
-            generate_samples(text=adversarial_texts, max_samples=config["n_samples_val"]-n_current_samples,
-                             batch_size=config["tts_batch_size"]//7,
-                             noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
-                             output_dir=negative_test_output_dir, auto_reduce_batch_size=True)
+            generate_samples(
+                text=adversarial_texts, 
+                model="../models/zh_CN-huayan-medium.onnx",
+                max_samples=config["n_samples_val"]-n_current_samples,
+                batch_size=config["tts_batch_size"]//7,
+                noise_scales=[1.0], 
+                noise_scale_ws=[1.0], 
+                length_scales=[0.75, 1.0, 1.25],
+                output_dir=negative_test_output_dir, 
+                auto_reduce_batch_size=True
+            )
             torch.cuda.empty_cache()
         else:
             logging.warning(f"Skipping generation of negative clips for testing, as ~{config['n_samples_val']} already exist")

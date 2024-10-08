@@ -26,7 +26,8 @@ def generate_samples(
     speed = 1.0
     speaker_ids = model.hps.data.spk2id
     for _ in trange(max_samples):
-        wav_path = output_dir / f"{randint(100000000,1000000000)}.wav"
+        fname = str(randint(100000000,1000000000))
+        wav_path = output_dir / f"{fname}.wav"
         model.tts_to_file(
             text,
             speaker_ids['ZH'],

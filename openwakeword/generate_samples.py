@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 from random import randint
 from tqdm import trange
+import os
 
 def generate_samples(
     text: Union[List[str], str],
@@ -27,7 +28,7 @@ def generate_samples(
     speaker_ids = model.hps.data.spk2id
     for _ in trange(max_samples):
         fname = str(randint(100000000,1000000000))
-        wav_path = output_dir / f"{fname}.wav"
+        wav_path = os.path.join(output_dir, f"{fname}.wav")
         model.tts_to_file(
             text,
             speaker_ids['ZH'],

@@ -594,6 +594,9 @@ def convert_onnx_to_tflite(onnx_model_path, output_path):
 
 
 if __name__ == '__main__':
+    from openwakeword.utils import download_models
+    download_models()
+    
     # Get training config file
     parser = argparse.ArgumentParser()
     parser.add_argument(

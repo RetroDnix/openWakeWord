@@ -2,6 +2,7 @@ from melo.api import TTS
 from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 from random import randint
+from tqdm import trange
 
 def generate_samples(
     text: Union[List[str], str],
@@ -24,8 +25,8 @@ def generate_samples(
     model = TTS(language='ZH', device=device)
     speed = 1.0
     speaker_ids = model.hps.data.spk2id
-    for _ in range(max_samples):
-        wav_path = output_dir / f"{randint(10000000,100000000)}.wav"
+    for _ in trange(max_samples):
+        wav_path = output_dir / f"{randint(100000000,1000000000)}.wav"
         model.tts_to_file(
             text,
             speaker_ids['ZH'],
